@@ -108,11 +108,11 @@ async function deleteProgram(req: Request, res: Response) {
 
 async function createExercise(req: Request, res: Response) {
     try {
-        const { id } = req.params;
+        const { programId } = req.params;
 
         const { name, sets } = req.body;
 
-        const program = await Program.findById(id);
+        const program = await Program.findById(programId);
         
         if (!program) {
             return res.status(404).json({ message: "Program not found" });
@@ -143,11 +143,91 @@ async function createExercise(req: Request, res: Response) {
     }
 }
 
+async function editExerciseName(req: Request, res: Response) {
+    try {
+        const { programId, exerciseId } = req.params;
+
+        const { name } = req.body;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId));
+
+        if (!workoutItem) {
+            return res.status(404).json({ message: "Exercise not found in program" });
+        }
+
+        const exercise = await Exercise.findById(exerciseId);
+
+        if (!exercise) {
+            return res.status(404).json({ message: "Exercise not found" });
+        }
+
+        exercise.name = name || exercise.name;
+
+        const updatedExercise = await exercise.save();
+
+        (workoutItem as any).name = name || (workoutItem as any).name;
+
+        await (workoutItem as any).save();
+
+        res.status(200).json(updatedExercise);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to edit exercise" });
+    }
+}
+
+async function deleteExercise(req: Request, res: Response) {
+    try {
+        const { programId, exerciseId } = req.params;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId));
+
+        if (!workoutItem) {
+            return res.status(404).json({ message: "Exercise not found in program" });
+        }
+
+        await Exercise.findByIdAndDelete(exerciseId);
+
+        if ((workoutItem as any).type === "superset") {
+            (workoutItem as any).components = (workoutItem as any).components.filter((component: any) => component.toString() !== exerciseId);
+
+            if ((workoutItem as any).components.length === 0) {
+                program.workout = program.workout.filter((item: any) => item._id.toString() !== workoutItem._id.toString());
+                await WorkoutItem.findByIdAndDelete(workoutItem._id);
+            } else {
+                await (workoutItem as any).save();
+            }
+        } else {
+            program.workout = program.workout.filter((item: any) => item._id.toString() !== workoutItem._id.toString());
+            await WorkoutItem.findByIdAndDelete(workoutItem._id);
+        }
+
+        await program.save();
+
+        res.status(200).json({ message: "Exercise deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to delete exercise" });
+    }
+}
+
 export {
     getPrograms,
     getProgramById,
     createProgram,
     editProgram,
     deleteProgram,
-    createExercise
+    createExercise,
+    editExerciseName,
+    deleteExercise
 }
