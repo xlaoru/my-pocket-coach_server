@@ -49,6 +49,16 @@
               { "weight": 35, "reps": 12 },
               { "weight": 30, "reps": 15 }
             ]
+          },
+          {
+            "_id": "ex-svend-press",
+            "type": "exercise",
+            "name": "Svend Press",
+            "sets": [
+              { "weight": 20, "reps": 15 },
+              { "weight": 20, "reps": 15 },
+              { "weight": 16, "reps": 20 }
+            ]
           }
         ]
       },

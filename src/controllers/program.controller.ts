@@ -317,6 +317,70 @@ async function removeExerciseSet(req: Request, res: Response) {
     }
 }
 
+async function moveExercise(req: Request, res: Response) {
+    try {
+        const { programId } = req.params
+
+        const { containerId, sourceIndex, destinationIndex } = req.body;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        if (containerId === programId) {
+            if (sourceIndex < 0 || sourceIndex >= program.workout.length || destinationIndex < 0 || destinationIndex >= program.workout.length) {
+                return res.status(400).json({ message: "Invalid source or destination index" });
+            }
+
+            const workoutItem = program.workout[sourceIndex];
+
+            if (!workoutItem) {
+                return res.status(400).json({ message: "Invalid source index" });
+            }
+
+            program.workout.splice(sourceIndex, 1);
+
+            program.workout.splice(destinationIndex, 0, workoutItem);
+
+            await program.save();
+
+            res.status(200).json({ message: "Exercise moved successfully" });
+        } else {
+            const superset = program.workout.find((item: any) => item._id.toString() === containerId);
+
+            if (!superset) {
+                return res.status(404).json({ message: "Superset not found" });
+            }
+
+            if ((superset as any).type !== "superset") {
+                return res.status(400).json({ message: "Container is not a superset" });
+            }
+
+            if (sourceIndex < 0 || sourceIndex >= (superset as any).components.length || destinationIndex < 0 || destinationIndex >= (superset as any).components.length) {
+                return res.status(400).json({ message: "Invalid source or destination index" });
+            }
+
+            const exerciseId = (superset as any).components[sourceIndex];
+
+            if (!exerciseId) {
+                return res.status(400).json({ message: "Invalid source index" });
+            }
+
+            (superset as any).components.splice(sourceIndex, 1);
+
+            (superset as any).components.splice(destinationIndex, 0, exerciseId);
+
+            await (superset as any).save();
+
+            res.status(200).json({ message: "Exercise moved successfully" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Failed to move exercise" });
+    }
+}
+
 async function deleteExercise(req: Request, res: Response) {
     try {
         const { programId, exerciseId } = req.params;
@@ -368,5 +432,6 @@ export {
     addExerciseSet,
     editExerciseSet,
     removeExerciseSet,
+    moveExercise,
     deleteExercise
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 const programRouter = Router();
 
-import { getPrograms, createProgram, getProgramById, editProgram, deleteProgram, createExercise, editExerciseName, addExerciseSet, editExerciseSet, removeExerciseSet, deleteExercise } from "../controllers/program.controller";
+import { getPrograms, createProgram, getProgramById, editProgram, deleteProgram, createExercise, editExerciseName, addExerciseSet, editExerciseSet, removeExerciseSet, moveExercise, deleteExercise } from "../controllers/program.controller";
 
 programRouter.get("/programs", getPrograms);
 
@@ -10,6 +10,8 @@ programRouter.get("/programs/:id", getProgramById);
 programRouter.post("/programs", createProgram);
 
 programRouter.put("/programs/:id", editProgram);
+
+programRouter.patch("/programs/:programId/workout/move", moveExercise)
 
 programRouter.delete("/programs/:id", deleteProgram);
 
