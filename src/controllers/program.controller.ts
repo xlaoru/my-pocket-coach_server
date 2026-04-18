@@ -421,6 +421,103 @@ async function deleteExercise(req: Request, res: Response) {
     }
 }
 
+async function createSuperset(req: Request, res: Response) {
+    try {
+        const { programId } = req.params;
+
+        const { name, workoutItemIds } = req.body;
+
+        if (!Array.isArray(workoutItemIds) || workoutItemIds.length < 2) {
+            return res.status(400).json({ message: "Select at least 2 exercises" });
+        }
+
+        const program = await Program.findById(programId)
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const selectedIds = workoutItemIds.map((itemId) => String(itemId));
+        const programWorkoutIds = program.workout.map((item: any) => String(item));
+
+        const hasUnknownItems = selectedIds.some((itemId) => !programWorkoutIds.includes(itemId));
+
+        if (hasUnknownItems) {
+            return res.status(400).json({ message: "Some selected items are not in this program" });
+        }
+
+        const workoutItems = await WorkoutItem.find({ _id: { $in: selectedIds } });
+        
+        if (workoutItems.length !== selectedIds.length) {
+            return res.status(400).json({ message: "Some workout items were not found" });
+        }
+
+        const canGroup = workoutItems.every(
+            (item) => item.type === "exercise" && item.components.length === 1
+        );
+
+        if (!canGroup) {
+            return res.status(400).json({
+                message: "Only single exercises can be grouped into a superset",
+            });
+        }
+
+        const orderedSelection = program.workout
+            .map((item: any, index: number) => ({ id: String(item), index }))
+            .filter((entry: { id: string; index: number }) => selectedIds.includes(entry.id))
+            .sort((a, b) => a.index - b.index);
+
+        if (orderedSelection.length === 0) {
+            return res.status(400).json({ message: "No valid workout items selected" });
+        }
+
+        const insertIndex = orderedSelection.at(0)?.index;
+
+        if (insertIndex === undefined) {
+            return res.status(400).json({ message: "No valid workout items selected" });
+        }
+
+        const exerciseIds = workoutItems
+            .sort(
+                (a, b) =>
+                    selectedIds.indexOf(String(a._id)) - selectedIds.indexOf(String(b._id))
+            )
+            .map((item) => item.components[0]);
+
+        const superset = new WorkoutItem({
+            type: "superset",
+            name: typeof name === "string" && name.trim() ? name.trim() : "Superset",
+            components: exerciseIds,
+        });
+
+        const savedSuperset = await superset.save();
+
+        const selectedSet = new Set(selectedIds);
+        
+        const nextWorkout = program.workout.filter(
+            (item: any) => !selectedSet.has(String(item))
+        );
+
+        nextWorkout.splice(insertIndex, 0, savedSuperset._id as any);
+
+        program.workout = nextWorkout as any;
+        await program.save();
+
+        await WorkoutItem.deleteMany({ _id: { $in: selectedIds } });
+
+        const updatedProgram = await Program.findById(programId).populate({
+            path: "workout",
+            populate: {
+                path: "components",
+            },
+        });
+
+        return res.status(200).json(updatedProgram);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to create superset" });
+    }
+}
+
 export {
     getPrograms,
     getProgramById,
@@ -433,5 +530,6 @@ export {
     editExerciseSet,
     removeExerciseSet,
     moveExercise,
-    deleteExercise
+    deleteExercise,
+    createSuperset
 }
