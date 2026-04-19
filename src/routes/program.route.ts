@@ -1,7 +1,7 @@
 import { Router } from "express";
 const programRouter = Router();
 
-import { getPrograms, createProgram, getProgramById, editProgram, deleteProgram, createExercise, editExerciseName, addExerciseSet, editExerciseSet, removeExerciseSet, moveExercise, deleteExercise, createSuperset } from "../controllers/program.controller";
+import { getPrograms, createProgram, getProgramById, editProgram, deleteProgram, createExercise, editExerciseName, addExerciseSet, editExerciseSet, removeExerciseSet, moveExercise, deleteExercise, createSuperset, editSupersetName, unlinkAllSupersetExercises, deleteSuperset } from "../controllers/program.controller";
 
 programRouter.get("/programs", getPrograms);
 
@@ -28,6 +28,12 @@ programRouter.delete("/programs/:programId/exercises/:exerciseId/sets/:setIndex"
 programRouter.delete("/programs/:programId/exercises/:exerciseId", deleteExercise);
 
 programRouter.post("/programs/:programId/supersets", createSuperset);
+
+programRouter.patch("/programs/:programId/supersets/:supersetId", editSupersetName)
+
+programRouter.delete("/programs/:programId/supersets/:supersetId/unlink", unlinkAllSupersetExercises)
+
+programRouter.delete("/programs/:programId/supersets/:supersetId", deleteSuperset)
 
 export {
     programRouter
