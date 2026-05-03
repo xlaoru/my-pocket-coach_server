@@ -657,6 +657,183 @@ async function unlinkAllSupersetExercises(req: Request, res: Response) {
     }
 }
 
+async function addNewExerciseInsideSuperset(req: Request, res: Response) {
+    try {
+        const { programId, supersetId } = req.params;
+
+        const { name, sets } = req.body;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId);
+
+        if (!workoutItem) {
+            return res.status(404).json({ message: "Superset not found in program" });
+        }
+
+        if ((workoutItem as any).type !== "superset") {
+            return res.status(400).json({ message: "Workout item is not a superset" });
+        }
+
+        const newExercise = new Exercise({
+            name,
+            sets
+        })
+
+        const savedExercise = await newExercise.save();
+
+        (workoutItem as any).components.push(savedExercise._id);
+
+        await (workoutItem as any).save();
+
+        const updatedProgram = await Program.findById(programId).populate({
+            path: "workout",
+            populate: {
+                path: "components",
+            },
+        });
+
+        res.status(200).json(updatedProgram);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to add an exercise inside superset" });
+    }
+}
+
+async function linkCurrentSupersetExercises(req: Request, res: Response) {
+    try {
+        const { programId, supersetId, exerciseId } = req.params;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId);
+
+        if (!workoutItem) {
+            return res.status(404).json({ message: "Superset not found in program" });
+        }
+
+        if ((workoutItem as any).type !== "superset") {
+            return res.status(400).json({ message: "Workout item is not a superset" });
+        }
+
+        const exercise = await Exercise.findById(exerciseId);
+
+        if (!exercise) {
+            return res.status(404).json({ message: "Exercise not found" });
+        }
+
+        if ((workoutItem as any).components.some((component: any) => component.toString() === exerciseId)) {
+            return res.status(400).json({ message: "Exercise is already linked to this superset" });
+        }
+
+        const linkedWorkoutItem = program.workout.find(
+            (item: any) =>
+                item._id.toString() !== supersetId &&
+                item.type === "exercise" &&
+                item.components.some((component: any) => component.toString() === exerciseId)
+        );
+
+        if (!linkedWorkoutItem) {
+            return res.status(404).json({
+                message: "Workout item not found in program",
+            });
+        }
+
+        program.workout = program.workout.filter(
+            (item: any) => item._id.toString() !== linkedWorkoutItem._id.toString()
+        );
+
+        (workoutItem as any).components.push(exercise._id);
+
+        await program.save()
+        await (workoutItem as any).save()
+        await WorkoutItem.findByIdAndDelete(linkedWorkoutItem._id)
+
+        const updatedProgram = await Program.findById(programId).populate({
+            path: "workout",
+            populate: {
+                path: "components",
+            },
+        });
+
+        res.status(200).json(updatedProgram);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to link superset exercise" });
+    }
+}
+
+async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
+    try {
+        const { programId, supersetId, exerciseId } = req.params;
+
+        const program = await Program.findById(programId).populate("workout");
+
+        if (!program) {
+            return res.status(404).json({ message: "Program not found" });
+        }
+
+        const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId);
+
+        if (!workoutItem) {
+            return res.status(404).json({ message: "Superset not found in program" });
+        }
+
+        if ((workoutItem as any).type !== "superset") {
+            return res.status(400).json({ message: "Workout item is not a superset" });
+        }
+
+        const exercise = await Exercise.findById(exerciseId);
+
+        if (!exercise) {
+            return res.status(404).json({ message: "Exercise not found" });
+        }
+
+        if (!(workoutItem as any).components.some((component: any) => component.toString() === exerciseId)) {
+            return res.status(400).json({ message: "Exercise is not linked to this superset" });
+        }
+
+        (workoutItem as any).components = (workoutItem as any).components.filter((component: any) => component.toString() !== exerciseId);
+
+        const newWorkoutItem = new WorkoutItem({
+            type: "exercise",
+            name: exercise.name,
+            components: [exercise._id],
+        });
+
+        const savedWorkoutItem = await newWorkoutItem.save();
+
+        const supersetIndex = program.workout.findIndex((item: any) => item._id.toString() === supersetId);
+
+        if (supersetIndex === -1) {
+            return res.status(400).json({ message: "Superset not found in program workout" });
+        }
+        
+        program.workout.splice(supersetIndex + 1, 0, savedWorkoutItem._id as any);
+
+        await program.save();
+
+        await (workoutItem as any).save();
+        
+        const updatedProgram = await Program.findById(programId).populate({
+            path: "workout",
+            populate: {
+                path: "components",
+            },
+        });
+
+        res.status(200).json(updatedProgram);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to unlink superset exercise" });
+    }
+}
+
 export {
     getPrograms,
     getProgramById,
@@ -673,5 +850,8 @@ export {
     createSuperset,
     editSupersetName,
     unlinkAllSupersetExercises,
-    deleteSuperset
+    deleteSuperset,
+    addNewExerciseInsideSuperset,
+    linkCurrentSupersetExercises,
+    unlinkCurrentSupersetExercises
 }
