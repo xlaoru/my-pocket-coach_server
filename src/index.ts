@@ -6,7 +6,7 @@ import cors from "cors"
 import express from "express"
 import mongoose from "mongoose"
 
-import { programRouter } from "./routes/program.route"
+import { apiRouter } from "./routes/api.route"
 
 const app = express()
 
@@ -19,7 +19,8 @@ app.use(
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }))
-app.use("/api", programRouter)
+
+app.use("/api", apiRouter)
 
 const PORT = process.env.PORT || 3001
 
