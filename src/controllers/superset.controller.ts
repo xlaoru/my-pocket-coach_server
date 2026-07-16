@@ -46,21 +46,6 @@ async function createSuperset(req: Request, res: Response) {
       })
     }
 
-    const orderedSelection = program.workout
-      .map((item: any, index: number) => ({ id: String(item), index }))
-      .filter((entry: { id: string; index: number }) => selectedIds.includes(entry.id))
-      .sort((a, b) => a.index - b.index)
-
-    if (orderedSelection.length === 0) {
-      return res.status(400).json({ message: 'No valid workout items selected' })
-    }
-
-    const insertIndex = orderedSelection.at(0)?.index
-
-    if (insertIndex === undefined) {
-      return res.status(400).json({ message: 'No valid workout items selected' })
-    }
-
     const exerciseIds = workoutItems
       .sort((a, b) => selectedIds.indexOf(String(a._id)) - selectedIds.indexOf(String(b._id)))
       .map((item) => item.components[0])
@@ -74,10 +59,22 @@ async function createSuperset(req: Request, res: Response) {
     const savedSuperset = await superset.save()
 
     const selectedSet = new Set(selectedIds)
+    const firstSelectedId = selectedIds[0]
 
-    const nextWorkout = program.workout.filter((item: any) => !selectedSet.has(String(item)))
+    const nextWorkout = program.workout.reduce((acc: any[], item: any) => {
+      const itemId = String(item)
 
-    nextWorkout.splice(insertIndex, 0, savedSuperset._id as any)
+      if (!selectedSet.has(itemId)) {
+        acc.push(item)
+        return acc
+      }
+
+      if (itemId === firstSelectedId) {
+        acc.push(savedSuperset._id)
+      }
+
+      return acc
+    }, [])
 
     program.workout = nextWorkout as any
     await program.save()
