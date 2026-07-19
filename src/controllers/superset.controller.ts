@@ -331,11 +331,15 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
       return res.status(404).json({ message: 'Program not found' })
     }
 
-    const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
+    const supersetIndex = program.workout.findIndex(
+      (item: any) => item._id.toString() === supersetId,
+    )
 
-    if (!workoutItem) {
+    if (supersetIndex === -1) {
       return res.status(404).json({ message: 'Superset not found in program' })
     }
+
+    const workoutItem = program.workout[supersetIndex]
 
     if ((workoutItem as any).type !== 'superset') {
       return res.status(400).json({ message: 'Workout item is not a superset' })
@@ -353,9 +357,45 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
       return res.status(400).json({ message: 'Exercise is not linked to this superset' })
     }
 
-    ;(workoutItem as any).components = (workoutItem as any).components.filter(
+    const remainingExerciseIds = (workoutItem as any).components.filter(
       (component: any) => component.toString() !== exerciseId,
     )
+
+    if (remainingExerciseIds.length <= 1) {
+      const dissolvedExerciseIds = [
+        ...remainingExerciseIds.map((id: any) => String(id)),
+        String(exercise._id),
+      ]
+
+      const dissolvedExercises = await Exercise.find({ _id: { $in: dissolvedExerciseIds } })
+
+      const orderedDissolvedExercises = dissolvedExercises.sort(
+        (a, b) =>
+          dissolvedExerciseIds.indexOf(String(a._id)) - dissolvedExerciseIds.indexOf(String(b._id)),
+      )
+
+      const newWorkoutItemsData = orderedDissolvedExercises.map((ex) => ({
+        type: 'exercise',
+        name: ex.name,
+        components: [ex._id],
+      }))
+
+      const createdWorkoutItems = await WorkoutItem.insertMany(newWorkoutItemsData)
+      const createdWorkoutItemIds = createdWorkoutItems.map((item) => item._id)
+
+      program.workout.splice(supersetIndex, 1, ...(createdWorkoutItemIds as any))
+
+      await program.save()
+      await WorkoutItem.findByIdAndDelete(supersetId)
+
+      const populatedWorkoutItems = await WorkoutItem.find({
+        _id: { $in: createdWorkoutItemIds },
+      }).populate('components')
+
+      return res.status(200).json(populatedWorkoutItems)
+    }
+
+    ;(workoutItem as any).components = remainingExerciseIds
 
     const newWorkoutItem = new WorkoutItem({
       type: 'exercise',
@@ -364,14 +404,6 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
     })
 
     const savedWorkoutItem = await newWorkoutItem.save()
-
-    const supersetIndex = program.workout.findIndex(
-      (item: any) => item._id.toString() === supersetId,
-    )
-
-    if (supersetIndex === -1) {
-      return res.status(400).json({ message: 'Superset not found in program workout' })
-    }
 
     program.workout.splice(supersetIndex + 1, 0, savedWorkoutItem._id as any)
 
