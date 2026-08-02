@@ -5,16 +5,10 @@ import {
   deleteStage,
   editStageDescription,
   editStageName,
-  getStageById,
-  getStages,
   moveStage,
 } from '../controllers/stage.controller'
 
 const stageRouter = Router()
-
-stageRouter.get('/periodizations/:periodizationId/stages', getStages)
-
-stageRouter.get('/periodizations/:periodizationId/stages/:stageId', getStageById)
 
 stageRouter.post('/periodizations/:periodizationId/stages', createStage)
 
