@@ -17,6 +17,7 @@ async function createStage(req: Request, res: Response) {
     const stage = new Stage({
       name,
       description,
+      periodizationId: periodization._id,
     })
 
     const savedStage = await stage.save()
