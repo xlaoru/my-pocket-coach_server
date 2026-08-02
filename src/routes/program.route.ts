@@ -1,19 +1,35 @@
-import { Router } from "express";
+import { Router } from 'express'
 
-import { getPrograms, getProgramById, createProgram, editProgram, deleteProgram, } from "../controllers/program.controller";
+import {
+  createProgram,
+  deleteProgram,
+  editProgram,
+  getProgramById,
+  getPrograms,
+  linkStage,
+  unlinkStage,
+} from '../controllers/program.controller'
 
-const programRouter = Router();
+const programRouter = Router()
 
-programRouter.get("/programs", getPrograms);
+programRouter.get('/programs', getPrograms)
 
-programRouter.get("/programs/:id", getProgramById);
+programRouter.get('/programs/:id', getProgramById)
 
-programRouter.post("/programs", createProgram);
+programRouter.post('/programs', createProgram)
 
-programRouter.put("/programs/:id", editProgram);
+programRouter.put('/programs/:id', editProgram)
 
-programRouter.delete("/programs/:id", deleteProgram);
+programRouter.delete('/programs/:id', deleteProgram)
 
-export {
-    programRouter
-}
+programRouter.patch(
+  '/programs/:programId/periodizations/:periodizationId/stages/:stageId/link',
+  linkStage,
+)
+
+programRouter.patch(
+  '/programs/:programId/periodizations/:periodizationId/stages/:stageId/unlink',
+  unlinkStage,
+)
+
+export { programRouter }

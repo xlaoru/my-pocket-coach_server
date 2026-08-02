@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { Periodization } from '../models/periodization.mode'
+import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
 
 async function getPeriodizations(req: Request, res: Response) {
@@ -101,6 +102,16 @@ async function deletePeriodization(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    const linkedProgram = await Program.findOne({
+      periodizationStage: { $in: periodization.stages },
+    })
+
+    if (linkedProgram) {
+      return res.status(409).json({
+        message: 'One or more stages are linked to a program. Unlink them before deleting',
+      })
     }
 
     await Stage.deleteMany({ _id: { $in: periodization.stages } })

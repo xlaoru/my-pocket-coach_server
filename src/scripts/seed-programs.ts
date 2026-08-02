@@ -4,7 +4,9 @@ import path from "node:path";
 import mongoose from "mongoose";
 
 import { Exercise } from "../models/exercise.model";
+import { Periodization } from "../models/periodization.mode";
 import { Program } from "../models/program.model";
+import { Stage } from "../models/stage.model";
 import { WorkoutItem } from "../models/workoutItem.model";
 
 dotenv.config();
@@ -25,6 +27,55 @@ type ProgramJson = {
   }>;
 };
 
+type PeriodizationJson = {
+  name: string;
+  description?: string;
+  stages: Array<{ name: string; description?: string }>;
+};
+
+const periodizations: PeriodizationJson[] = [
+  {
+    name: "Strength Block",
+    description: "12-week linear strength progression cycle.",
+    stages: [
+      {
+        name: "Accumulation",
+        description: "High volume, moderate intensity to build a work-capacity base.",
+      },
+      {
+        name: "Intensification",
+        description: "Volume drops as load increases toward heavier singles and doubles.",
+      },
+      {
+        name: "Peak",
+        description: "Low volume, near-max loads to express peak strength.",
+      },
+    ],
+  },
+  {
+    name: "Hypertrophy Cycle",
+    description: "6-week hypertrophy-focused block with a planned deload.",
+    stages: [
+      {
+        name: "Volume Phase",
+        description: "High volume, moderate intensity to maximize muscle growth.",
+      },
+      {
+        name: "Deload",
+        description: "Reduced volume and intensity to recover before the next block.",
+      },
+    ],
+  },
+];
+
+// Maps a program name to [periodizationIndex, stageIndex] in `periodizations`.
+// Programs not listed here are seeded without a periodizationStage.
+const programStageAssignments: Record<string, [number, number]> = {
+  "Push Strength A": [0, 0],
+  "Pull Hypertrophy B": [0, 1],
+  "Upper Body Volume D": [1, 0],
+};
+
 async function main() {
   const mongoUri = process.env.MONGODB_URI;
   if (!mongoUri) throw new Error("MONGODB_URI is missing");
@@ -37,6 +88,33 @@ async function main() {
   await Program.deleteMany({});
   await WorkoutItem.deleteMany({});
   await Exercise.deleteMany({});
+  await Periodization.deleteMany({});
+  await Stage.deleteMany({});
+
+  const stageIdsByPeriodization: mongoose.Types.ObjectId[][] = [];
+
+  for (const periodization of periodizations) {
+    const periodizationDoc = await Periodization.create({
+      name: periodization.name,
+      ...(periodization.description ? { description: periodization.description } : {}),
+      stages: [],
+    });
+
+    const stageIds: mongoose.Types.ObjectId[] = [];
+    for (const stage of periodization.stages) {
+      const stageDoc = await Stage.create({
+        name: stage.name,
+        ...(stage.description ? { description: stage.description } : {}),
+        periodizationId: periodizationDoc._id,
+      });
+      stageIds.push(stageDoc._id);
+    }
+
+    periodizationDoc.stages = stageIds;
+    await periodizationDoc.save();
+
+    stageIdsByPeriodization.push(stageIds);
+  }
 
   for (const program of programs) {
     const workoutIds: mongoose.Types.ObjectId[] = [];
@@ -71,15 +149,21 @@ async function main() {
       workoutIds.push(supersetDoc._id);
     }
 
+    const assignment = programStageAssignments[program.name];
+    const periodizationStage = assignment
+      ? stageIdsByPeriodization[assignment[0]]?.[assignment[1]]
+      : undefined;
+
     await Program.create({
       name: program.name,
       ...(program.description ? { description: program.description } : {}),
       date: new Date(program.date),
       workout: workoutIds,
+      ...(periodizationStage ? { periodizationStage } : {}),
     });
   }
 
-  console.log(`Seed done. Programs: ${programs.length}`);
+  console.log(`Seed done. Programs: ${programs.length}, Periodizations: ${periodizations.length}`);
   await mongoose.disconnect();
 }
 

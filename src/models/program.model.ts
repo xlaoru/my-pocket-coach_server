@@ -13,6 +13,7 @@ const programSchema = new mongoose.Schema({
   periodizationStage: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Stage',
+    default: null,
   },
 })
 

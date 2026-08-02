@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { Periodization } from '../models/periodization.mode'
+import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
 
 async function createStage(req: Request, res: Response) {
@@ -159,6 +160,14 @@ async function deleteStage(req: Request, res: Response) {
 
     if (!isOwner) {
       return res.status(403).json({ message: 'Your stage is not from this periodization' })
+    }
+
+    const linkedProgram = await Program.findOne({ periodizationStage: stageId as any })
+
+    if (linkedProgram) {
+      return res
+        .status(409)
+        .json({ message: 'Stage is already linked to program. Unlink it before deleting' })
     }
 
     periodization.stages = periodization.stages.filter((id) => !id.equals(stageId as any))

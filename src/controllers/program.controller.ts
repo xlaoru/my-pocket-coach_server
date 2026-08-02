@@ -1,7 +1,9 @@
 import { Request, Response } from 'express'
 import '../models/exercise.model'
 import { Exercise } from '../models/exercise.model'
+import { Periodization } from '../models/periodization.mode'
 import { Program } from '../models/program.model'
+import { Stage } from '../models/stage.model'
 import '../models/workoutItem.model'
 import { WorkoutItem } from '../models/workoutItem.model'
 
@@ -114,4 +116,92 @@ async function deleteProgram(req: Request, res: Response) {
   }
 }
 
-export { createProgram, deleteProgram, editProgram, getProgramById, getPrograms }
+async function linkStage(req: Request, res: Response) {
+  try {
+    const { programId, periodizationId, stageId } = req.params
+
+    const program = await Program.findById(programId)
+
+    if (!program) {
+      return res.status(404).json({ message: 'Program not found' })
+    }
+
+    const periodization = await Periodization.findById(periodizationId)
+
+    if (!periodization) {
+      return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    const stage = await Stage.findById(stageId)
+
+    if (!stage) {
+      return res.status(404).json({ message: 'Stage not found' })
+    }
+
+    const isOwner = periodization.stages.some((id) => id.equals(stageId as any))
+
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Your stage is not from this periodization' })
+    }
+
+    program.periodizationStage = stageId as any
+
+    await program.save()
+
+    res.status(200).json({ message: 'Periodization stage was linked succesfully' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to link periodization stage to program' })
+  }
+}
+
+async function unlinkStage(req: Request, res: Response) {
+  try {
+    const { programId, periodizationId, stageId } = req.params
+
+    const program = await Program.findById(programId)
+
+    if (!program) {
+      return res.status(404).json({ message: 'Program not found' })
+    }
+
+    const periodization = await Periodization.findById(periodizationId)
+
+    if (!periodization) {
+      return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    const stage = await Stage.findById(stageId)
+
+    if (!stage) {
+      return res.status(404).json({ message: 'Stage not found' })
+    }
+
+    const isOwner = periodization.stages.some((id) => id.equals(stageId as any))
+
+    if (!isOwner) {
+      return res.status(403).json({ message: 'Your stage is not from this periodization' })
+    }
+
+    if (!program.periodizationStage || !program.periodizationStage.equals(stageId as any)) {
+      return res.status(400).json({ message: 'Program is not linked to this stage' })
+    }
+
+    program.periodizationStage = null
+
+    await program.save()
+
+    res.status(200).json({ message: 'Periodization stage was unlinked succesfully' })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to unlink periodization stage to program' })
+  }
+}
+
+export {
+  createProgram,
+  deleteProgram,
+  editProgram,
+  getProgramById,
+  getPrograms,
+  linkStage,
+  unlinkStage,
+}
