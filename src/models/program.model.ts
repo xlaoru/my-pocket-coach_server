@@ -1,13 +1,20 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const programSchema = new mongoose.Schema({
-    name: String,
-    description: String,
-    date: Date,
-    workout: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "WorkoutItem",
-    }],
-});
+  name: String,
+  description: String,
+  date: Date,
+  workout: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'WorkoutItem',
+    },
+  ],
+  periodizationStage: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Stage',
+    default: null,
+  },
+})
 
-export const Program = mongoose.model("Program", programSchema);
+export const Program = mongoose.model('Program', programSchema)
