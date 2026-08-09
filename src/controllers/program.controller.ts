@@ -4,6 +4,7 @@ import { Exercise } from '../models/exercise.model'
 import { Periodization } from '../models/periodization.mode'
 import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
+import { Template } from '../models/template.model'
 import '../models/workoutItem.model'
 import { WorkoutItem } from '../models/workoutItem.model'
 
@@ -196,10 +197,68 @@ async function unlinkStage(req: Request, res: Response) {
   }
 }
 
+async function generateProgram(req: Request, res: Response) {
+  try {
+    const { templateId } = req.params
+
+    const template = await Template.findById(templateId).populate({
+      path: 'templateWorkout',
+      populate: {
+        path: 'components',
+      },
+    })
+
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' })
+    }
+
+    const workoutItemIds = []
+
+    for (const templateWorkoutItem of template.templateWorkout as any[]) {
+      const exercises = await Exercise.insertMany(
+        templateWorkoutItem.components.map((templateExercise: any) => ({
+          name: templateExercise.name,
+          sets: Array.from({ length: templateExercise.sets }, () => ({
+            weight: 0,
+            reps: 0,
+          })),
+        })),
+      )
+
+      const workoutItem = await new WorkoutItem({
+        type: templateWorkoutItem.type,
+        name: templateWorkoutItem.name,
+        components: exercises.map((exercise) => exercise._id),
+      }).save()
+
+      workoutItemIds.push(workoutItem._id)
+    }
+
+    const newProgram = await new Program({
+      name: template.name,
+      description: template.description ?? '',
+      date: new Date(),
+      workout: workoutItemIds,
+    }).save()
+
+    const populatedProgram = await Program.findById(newProgram._id).populate({
+      path: 'workout',
+      populate: {
+        path: 'components',
+      },
+    })
+
+    res.status(201).json(populatedProgram)
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate program' })
+  }
+}
+
 export {
   createProgram,
   deleteProgram,
   editProgram,
+  generateProgram,
   getProgramById,
   getPrograms,
   linkStage,
