@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
 
 const templateSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    required: true,
+  },
   description: String,
   templateWorkout: [
     {
