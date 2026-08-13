@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Push Day Template",
+    "description": "Upper-body push template covering chest, shoulders, and triceps.",
+    "workout": [
+      {
+        "type": "exercise",
+        "name": "Barbell Bench Press",
+        "sets": 4
+      },
+      {
+        "type": "exercise",
+        "name": "Standing Overhead Press",
+        "sets": 3
+      },
+      {
+        "type": "superset",
+        "name": "Chest + Triceps Finisher",
+        "components": [
+          { "name": "Incline Dumbbell Press", "sets": 3 },
+          { "name": "Cable Triceps Pushdown", "sets": 3 },
+          { "name": "Svend Press", "sets": 3 }
+        ]
+      },
+      {
+        "type": "exercise",
+        "name": "Dumbbell Lateral Raise",
+        "sets": 3
+      }
+    ]
+  },
+  {
+    "name": "Pull Day Template",
+    "description": "Back and biceps template built around a deadlift variation and pulling volume.",
+    "workout": [
+      {
+        "type": "exercise",
+        "name": "Conventional Deadlift",
+        "sets": 3
+      },
+      {
+        "type": "exercise",
+        "name": "Weighted Pull-up",
+        "sets": 3
+      },
+      {
+        "type": "superset",
+        "name": "Row + Rear Delts",
+        "components": [
+          { "name": "Chest-Supported Row", "sets": 3 },
+          { "name": "Face Pull", "sets": 3 }
+        ]
+      },
+      {
+        "type": "exercise",
+        "name": "Barbell Curl",
+        "sets": 3
+      }
+    ]
+  },
+  {
+    "name": "Leg Day Template",
+    "description": "Lower-body template combining a squat pattern, a hinge pattern, and accessory supersets.",
+    "workout": [
+      {
+        "type": "exercise",
+        "name": "Back Squat",
+        "sets": 4
+      },
+      {
+        "type": "exercise",
+        "name": "Romanian Deadlift",
+        "sets": 3
+      },
+      {
+        "type": "superset",
+        "name": "Quad + Calf Superset",
+        "components": [
+          { "name": "Leg Press", "sets": 3 },
+          { "name": "Standing Calf Raise", "sets": 3 }
+        ]
+      },
+      {
+        "type": "superset",
+        "name": "Hamstring + Glute Superset",
+        "components": [
+          { "name": "Lying Leg Curl", "sets": 3 },
+          { "name": "Hip Thrust", "sets": 3 }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Full Body Template",
+    "description": "Full-body session for days when only one workout can be trained per week.",
+    "workout": [
+      {
+        "type": "exercise",
+        "name": "Front Squat",
+        "sets": 3
+      },
+      {
+        "type": "exercise",
+        "name": "Push Press",
+        "sets": 3
+      },
+      {
+        "type": "superset",
+        "name": "Athletic Pull + Core Superset",
+        "components": [
+          { "name": "Chin-up", "sets": 3 },
+          { "name": "Hanging Knee Raise", "sets": 3 }
+        ]
+      },
+      {
+        "type": "exercise",
+        "name": "Farmer Carry",
+        "sets": 3
+      }
+    ]
+  }
+]

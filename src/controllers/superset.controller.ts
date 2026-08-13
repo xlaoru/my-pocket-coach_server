@@ -145,13 +145,13 @@ async function deleteSuperset(req: Request, res: Response) {
 
     const exerciseIds = (workoutItem as any).components
 
-    await WorkoutItem.findByIdAndDelete(supersetId)
-
     program.workout = program.workout.filter((item: any) => item._id.toString() !== supersetId)
 
-    await Exercise.deleteMany({ _id: { $in: exerciseIds } })
-
     await program.save()
+
+    await WorkoutItem.findByIdAndDelete(supersetId)
+
+    await Exercise.deleteMany({ _id: { $in: exerciseIds } })
 
     res.status(200).json({ message: 'Superset deleted successfully' })
   } catch (error) {

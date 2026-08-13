@@ -4,6 +4,7 @@ import {
   createProgram,
   deleteProgram,
   editProgram,
+  generateProgram,
   getProgramById,
   getPrograms,
   linkStage,
@@ -31,5 +32,7 @@ programRouter.patch(
   '/programs/:programId/periodizations/:periodizationId/stages/:stageId/unlink',
   unlinkStage,
 )
+
+programRouter.post('/templates/:templateId/generate', generateProgram)
 
 export { programRouter }

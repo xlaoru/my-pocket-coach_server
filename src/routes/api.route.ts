@@ -5,6 +5,9 @@ import { periodizationRouter } from './periodization.route'
 import { programRouter } from './program.route'
 import { stageRouter } from './stage.route'
 import { supersetRouter } from './superset.route'
+import { templateRouter } from './template.route'
+import { templateExerciseRoute } from './templateExercise.route'
+import { templateSupersetRouter } from './templateSuperset.route'
 
 const apiRouter = Router()
 
@@ -13,5 +16,8 @@ apiRouter.use(exerciseRouter)
 apiRouter.use(supersetRouter)
 apiRouter.use(periodizationRouter)
 apiRouter.use(stageRouter)
+apiRouter.use(templateRouter)
+apiRouter.use(templateExerciseRoute)
+apiRouter.use(templateSupersetRouter)
 
 export { apiRouter }

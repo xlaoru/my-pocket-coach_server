@@ -7,6 +7,9 @@ import { Exercise } from "../models/exercise.model";
 import { Periodization } from "../models/periodization.mode";
 import { Program } from "../models/program.model";
 import { Stage } from "../models/stage.model";
+import { Template } from "../models/template.model";
+import { TemplateExercise } from "../models/templateExercise.model";
+import { TemplateWorkoutItem } from "../models/templateWorkoutItem.model";
 import { WorkoutItem } from "../models/workoutItem.model";
 
 dotenv.config();
@@ -31,6 +34,17 @@ type PeriodizationJson = {
   name: string;
   description?: string;
   stages: Array<{ name: string; description?: string }>;
+};
+
+type TemplateJson = {
+  name: string;
+  description?: string;
+  workout: Array<{
+    type: "exercise" | "superset";
+    name: string;
+    sets?: number;
+    components?: Array<{ name: string; sets?: number }>;
+  }>;
 };
 
 const periodizations: PeriodizationJson[] = [
@@ -83,6 +97,9 @@ async function main() {
   const jsonPath = path.resolve(process.cwd(), "./src/scripts/programs.json");
   const programs = JSON.parse(fs.readFileSync(jsonPath, "utf-8")) as ProgramJson[];
 
+  const templatesJsonPath = path.resolve(process.cwd(), "./src/scripts/templates.json");
+  const templates = JSON.parse(fs.readFileSync(templatesJsonPath, "utf-8")) as TemplateJson[];
+
   await mongoose.connect(mongoUri);
 
   await Program.deleteMany({});
@@ -90,6 +107,9 @@ async function main() {
   await Exercise.deleteMany({});
   await Periodization.deleteMany({});
   await Stage.deleteMany({});
+  await Template.deleteMany({});
+  await TemplateWorkoutItem.deleteMany({});
+  await TemplateExercise.deleteMany({});
 
   const stageIdsByPeriodization: mongoose.Types.ObjectId[][] = [];
 
@@ -163,7 +183,52 @@ async function main() {
     });
   }
 
-  console.log(`Seed done. Programs: ${programs.length}, Periodizations: ${periodizations.length}`);
+  for (const template of templates) {
+    const templateWorkoutIds: mongoose.Types.ObjectId[] = [];
+
+    for (const item of template.workout) {
+      if (item.type === "exercise") {
+        const exerciseDoc = await TemplateExercise.create({
+          name: item.name,
+          sets: item.sets ?? 0,
+        });
+
+        const workoutItemDoc = await TemplateWorkoutItem.create({
+          type: "exercise",
+          name: item.name,
+          components: [exerciseDoc._id],
+        });
+        templateWorkoutIds.push(workoutItemDoc._id);
+        continue;
+      }
+
+      const exerciseIds: mongoose.Types.ObjectId[] = [];
+      for (const ex of item.components ?? []) {
+        const exerciseDoc = await TemplateExercise.create({
+          name: ex.name,
+          sets: ex.sets ?? 0,
+        });
+        exerciseIds.push(exerciseDoc._id);
+      }
+
+      const supersetDoc = await TemplateWorkoutItem.create({
+        type: "superset",
+        name: item.name,
+        components: exerciseIds,
+      });
+      templateWorkoutIds.push(supersetDoc._id);
+    }
+
+    await Template.create({
+      name: template.name,
+      ...(template.description ? { description: template.description } : {}),
+      templateWorkout: templateWorkoutIds,
+    });
+  }
+
+  console.log(
+    `Seed done. Programs: ${programs.length}, Periodizations: ${periodizations.length}, Templates: ${templates.length}`,
+  );
   await mongoose.disconnect();
 }
 
