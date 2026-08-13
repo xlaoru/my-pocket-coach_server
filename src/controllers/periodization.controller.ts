@@ -5,9 +5,11 @@ import { Stage } from '../models/stage.model'
 
 async function getPeriodizations(req: Request, res: Response) {
   try {
-    const periodizations = await Periodization.find().populate({
-      path: 'stages',
-    })
+    const periodizations = await Periodization.find()
+      .sort({ _id: -1 })
+      .populate({
+        path: 'stages',
+      })
 
     res.status(200).json(periodizations)
   } catch (error) {

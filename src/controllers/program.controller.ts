@@ -11,6 +11,7 @@ import { WorkoutItem } from '../models/workoutItem.model'
 async function getPrograms(req: Request, res: Response) {
   try {
     const programs = await Program.find()
+      .sort({ _id: -1 })
       .populate({
         path: 'workout',
         populate: {

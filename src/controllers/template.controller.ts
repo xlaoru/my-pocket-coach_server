@@ -5,12 +5,14 @@ import { TemplateWorkoutItem } from '../models/templateWorkoutItem.model'
 
 async function getTemplates(req: Request, res: Response) {
   try {
-    const templates = await Template.find().populate({
-      path: 'templateWorkout',
-      populate: {
-        path: 'components',
-      },
-    })
+    const templates = await Template.find()
+      .sort({ _id: -1 })
+      .populate({
+        path: 'templateWorkout',
+        populate: {
+          path: 'components',
+        },
+      })
 
     res.status(200).json(templates)
   } catch (error) {
