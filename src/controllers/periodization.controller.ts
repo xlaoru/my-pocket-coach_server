@@ -1,11 +1,13 @@
 import { Request, Response } from 'express'
-import { Periodization } from '../models/periodization.mode'
+import { Periodization } from '../models/periodization.model'
 import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
 
 async function getPeriodizations(req: Request, res: Response) {
   try {
-    const periodizations = await Periodization.find()
+    const userId = req.user!.id
+
+    const periodizations = await Periodization.find({ user: userId })
       .sort({ _id: -1 })
       .populate({
         path: 'stages',
@@ -19,6 +21,8 @@ async function getPeriodizations(req: Request, res: Response) {
 
 async function getPeriodizationById(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const periodization = await Periodization.findById(id).populate({
@@ -29,6 +33,10 @@ async function getPeriodizationById(req: Request, res: Response) {
       return res.status(404).json({ message: 'Periodization not found' })
     }
 
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this periodization' })
+    }
+
     res.status(200).json(periodization)
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch periodization' })
@@ -37,11 +45,14 @@ async function getPeriodizationById(req: Request, res: Response) {
 
 async function createPeriodization(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { name, description } = req.body
 
     const newPeriodization = new Periodization({
       name,
       description,
+      user: userId,
     })
 
     const savedPeriodization = await newPeriodization.save()
@@ -54,6 +65,8 @@ async function createPeriodization(req: Request, res: Response) {
 
 async function editPeriodizationName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const { name } = req.body
@@ -62,6 +75,10 @@ async function editPeriodizationName(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     periodization.name = name || periodization.name
@@ -76,6 +93,8 @@ async function editPeriodizationName(req: Request, res: Response) {
 
 async function editPeriodizationDescription(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const { description } = req.body
@@ -84,6 +103,10 @@ async function editPeriodizationDescription(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     periodization.description = description || periodization.description
@@ -98,12 +121,18 @@ async function editPeriodizationDescription(req: Request, res: Response) {
 
 async function deletePeriodization(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const periodization = await Periodization.findById(id)
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     const linkedProgram = await Program.findOne({

@@ -7,6 +7,8 @@ import { WorkoutItem } from '../models/workoutItem.model'
 
 async function createSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId } = req.params
 
     const { name, workoutItemIds } = req.body
@@ -19,6 +21,10 @@ async function createSuperset(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const selectedIds = workoutItemIds.map((itemId) => String(itemId))
@@ -91,6 +97,8 @@ async function createSuperset(req: Request, res: Response) {
 
 async function editSupersetName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId } = req.params
 
     const { name } = req.body
@@ -99,6 +107,10 @@ async function editSupersetName(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
@@ -125,12 +137,18 @@ async function editSupersetName(req: Request, res: Response) {
 
 async function deleteSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
@@ -161,12 +179,18 @@ async function deleteSuperset(req: Request, res: Response) {
 
 async function unlinkAllSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     let deletedSupersetIndex = -1
@@ -220,6 +244,8 @@ async function unlinkAllSupersetExercises(req: Request, res: Response) {
 
 async function addNewExerciseInsideSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId } = req.params
 
     const { name, sets } = req.body
@@ -228,6 +254,10 @@ async function addNewExerciseInsideSuperset(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
@@ -261,12 +291,18 @@ async function addNewExerciseInsideSuperset(req: Request, res: Response) {
 
 async function linkCurrentSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId, exerciseId } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
@@ -323,12 +359,18 @@ async function linkCurrentSupersetExercises(req: Request, res: Response) {
 
 async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, supersetId, exerciseId } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const supersetIndex = program.workout.findIndex(

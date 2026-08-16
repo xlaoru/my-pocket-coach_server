@@ -1,16 +1,25 @@
 import { Request, Response } from 'express'
 import '../models/exercise.model'
 import { Exercise } from '../models/exercise.model'
-import { Periodization } from '../models/periodization.mode'
+import { Periodization } from '../models/periodization.model'
 import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
 import { Template } from '../models/template.model'
+import { User } from '../models/user.model'
 import '../models/workoutItem.model'
 import { WorkoutItem } from '../models/workoutItem.model'
 
 async function getPrograms(req: Request, res: Response) {
   try {
-    const programs = await Program.find()
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const programs = await Program.find({ user: userId })
       .sort({ _id: -1 })
       .populate({
         path: 'workout',
@@ -31,6 +40,14 @@ async function getPrograms(req: Request, res: Response) {
 
 async function getProgramById(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { id } = req.params
 
     const program = await Program.findById(id)
@@ -45,6 +62,14 @@ async function getProgramById(req: Request, res: Response) {
         populate: { path: 'periodizationId', select: 'name' },
       })
 
+    if (!program) {
+      return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this program' })
+    }
+
     res.status(200).json(program)
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch program' })
@@ -53,12 +78,20 @@ async function getProgramById(req: Request, res: Response) {
 
 async function createProgram(req: Request, res: Response) {
   try {
-    const { name, description, workout } = req.body
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const { name, description } = req.body
 
     const newProgram = new Program({
       name,
       description,
-      workout,
+      user: userId,
     })
 
     const savedProgram = await newProgram.save()
@@ -71,6 +104,14 @@ async function createProgram(req: Request, res: Response) {
 
 async function editProgram(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { id } = req.params
 
     const { name, description = '' } = req.body
@@ -79,6 +120,10 @@ async function editProgram(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this program' })
     }
 
     program.name = name || program.name
@@ -94,12 +139,24 @@ async function editProgram(req: Request, res: Response) {
 
 async function deleteProgram(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { id } = req.params
 
     const program = await Program.findById(id).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this program' })
     }
 
     const exerciseIds = program.workout.flatMap((item: any) => item.components)
@@ -120,6 +177,14 @@ async function deleteProgram(req: Request, res: Response) {
 
 async function linkStage(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { programId, periodizationId, stageId } = req.params
 
     const program = await Program.findById(programId)
@@ -128,10 +193,20 @@ async function linkStage(req: Request, res: Response) {
       return res.status(404).json({ message: 'Program not found' })
     }
 
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this program' })
+    }
+
     const periodization = await Periodization.findById(periodizationId)
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to link this periodization to that program' })
     }
 
     const stage = await Stage.findById(stageId)
@@ -158,6 +233,14 @@ async function linkStage(req: Request, res: Response) {
 
 async function unlinkStage(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { programId, periodizationId, stageId } = req.params
 
     const program = await Program.findById(programId)
@@ -166,10 +249,20 @@ async function unlinkStage(req: Request, res: Response) {
       return res.status(404).json({ message: 'Program not found' })
     }
 
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this program' })
+    }
+
     const periodization = await Periodization.findById(periodizationId)
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to link this periodization to that program' })
     }
 
     const stage = await Stage.findById(stageId)
@@ -200,6 +293,14 @@ async function unlinkStage(req: Request, res: Response) {
 
 async function generateProgram(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
     const { templateId } = req.params
 
     const template = await Template.findById(templateId).populate({
@@ -211,6 +312,12 @@ async function generateProgram(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to generate any programs from this template' })
     }
 
     const workoutItemIds = []
@@ -236,6 +343,7 @@ async function generateProgram(req: Request, res: Response) {
     }
 
     const newProgram = await new Program({
+      user: userId,
       name: template.name,
       description: template.description ?? '',
       date: new Date(),

@@ -8,19 +8,24 @@ import {
   getPeriodizationById,
   getPeriodizations,
 } from '../controllers/periodization.controller'
+import { isAuth } from '../middleware/is-auth.middleware'
 
 const periodizationRouter = Router()
 
-periodizationRouter.get('/periodizations', getPeriodizations)
+periodizationRouter.get('/periodizations', isAuth, getPeriodizations)
 
-periodizationRouter.get('/periodizations/:id', getPeriodizationById)
+periodizationRouter.get('/periodizations/:id', isAuth, getPeriodizationById)
 
-periodizationRouter.post('/periodizations', createPeriodization)
+periodizationRouter.post('/periodizations', isAuth, createPeriodization)
 
-periodizationRouter.patch('/periodizations/:id/name', editPeriodizationName)
+periodizationRouter.patch('/periodizations/:id/name', isAuth, editPeriodizationName)
 
-periodizationRouter.patch('/periodizations/:id/description', editPeriodizationDescription)
+periodizationRouter.patch(
+  '/periodizations/:id/description',
+  isAuth,
+  editPeriodizationDescription,
+)
 
-periodizationRouter.delete('/periodizations/:id', deletePeriodization)
+periodizationRouter.delete('/periodizations/:id', isAuth, deletePeriodization)
 
 export { periodizationRouter }

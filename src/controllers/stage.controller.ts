@@ -1,10 +1,12 @@
 import { Request, Response } from 'express'
-import { Periodization } from '../models/periodization.mode'
+import { Periodization } from '../models/periodization.model'
 import { Program } from '../models/program.model'
 import { Stage } from '../models/stage.model'
 
 async function createStage(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { periodizationId } = req.params
 
     const { name, description } = req.body
@@ -13,6 +15,10 @@ async function createStage(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     const stage = new Stage({
@@ -35,6 +41,8 @@ async function createStage(req: Request, res: Response) {
 
 async function editStageName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { periodizationId, stageId } = req.params
 
     const { name } = req.body
@@ -43,6 +51,10 @@ async function editStageName(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     const stage = await Stage.findById(stageId)
@@ -69,6 +81,8 @@ async function editStageName(req: Request, res: Response) {
 
 async function editStageDescription(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { periodizationId, stageId } = req.params
 
     const { description } = req.body
@@ -77,6 +91,10 @@ async function editStageDescription(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     const stage = await Stage.findById(stageId)
@@ -103,6 +121,8 @@ async function editStageDescription(req: Request, res: Response) {
 
 async function moveStage(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { periodizationId } = req.params
 
     const { sourceIndex, destinationIndex } = req.body
@@ -111,6 +131,10 @@ async function moveStage(req: Request, res: Response) {
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     if (
@@ -142,12 +166,18 @@ async function moveStage(req: Request, res: Response) {
 
 async function deleteStage(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { periodizationId, stageId } = req.params
 
     const periodization = await Periodization.findById(periodizationId)
 
     if (!periodization) {
       return res.status(404).json({ message: 'Periodization not found' })
+    }
+
+    if (!periodization.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this periodization' })
     }
 
     const stage = await Stage.findById(stageId)

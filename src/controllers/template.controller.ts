@@ -5,7 +5,9 @@ import { TemplateWorkoutItem } from '../models/templateWorkoutItem.model'
 
 async function getTemplates(req: Request, res: Response) {
   try {
-    const templates = await Template.find()
+    const userId = req.user!.id
+
+    const templates = await Template.find({ user: userId })
       .sort({ _id: -1 })
       .populate({
         path: 'templateWorkout',
@@ -22,6 +24,8 @@ async function getTemplates(req: Request, res: Response) {
 
 async function getTemplateById(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const template = await Template.findById(id).populate({
@@ -35,6 +39,10 @@ async function getTemplateById(req: Request, res: Response) {
       return res.status(404).json({ message: 'Template not found' })
     }
 
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to watch this template' })
+    }
+
     res.status(200).json(template)
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch template' })
@@ -43,11 +51,14 @@ async function getTemplateById(req: Request, res: Response) {
 
 async function createTemplate(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { name, description } = req.body
 
     const newTemplate = new Template({
       name,
       description,
+      user: userId,
     })
 
     const savedTemplate = await newTemplate.save()
@@ -60,6 +71,8 @@ async function createTemplate(req: Request, res: Response) {
 
 async function editTemplateName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const { name } = req.body
@@ -68,6 +81,10 @@ async function editTemplateName(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     template.name = name || template.name
@@ -82,6 +99,8 @@ async function editTemplateName(req: Request, res: Response) {
 
 async function editTemplateDescription(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const { description } = req.body
@@ -90,6 +109,10 @@ async function editTemplateDescription(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     template.description = description || template.description
@@ -104,12 +127,18 @@ async function editTemplateDescription(req: Request, res: Response) {
 
 async function deleteTemplate(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { id } = req.params
 
     const template = await Template.findById(id).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateExerciseIds = template.templateWorkout.flatMap((item: any) => item.components)

@@ -7,6 +7,8 @@ import { WorkoutItem } from '../models/workoutItem.model'
 
 async function createExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId } = req.params
 
     const { name, sets } = req.body
@@ -15,6 +17,10 @@ async function createExercise(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const newExercise = new Exercise({
@@ -44,6 +50,8 @@ async function createExercise(req: Request, res: Response) {
 
 async function editExerciseName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, exerciseId } = req.params
 
     const { name } = req.body
@@ -52,6 +60,10 @@ async function editExerciseName(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId))
@@ -84,6 +96,8 @@ async function editExerciseName(req: Request, res: Response) {
 
 async function addExerciseSet(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, exerciseId } = req.params
 
     const { weight, reps } = req.body
@@ -92,6 +106,10 @@ async function addExerciseSet(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId))
@@ -118,6 +136,8 @@ async function addExerciseSet(req: Request, res: Response) {
 
 async function editExerciseSet(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, exerciseId, setIndex } = req.params
 
     const { weight, reps } = req.body as { weight?: unknown; reps?: unknown }
@@ -126,6 +146,10 @@ async function editExerciseSet(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId))
@@ -184,12 +208,18 @@ async function editExerciseSet(req: Request, res: Response) {
 
 async function removeExerciseSet(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, exerciseId, setIndex } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId))
@@ -220,6 +250,8 @@ async function removeExerciseSet(req: Request, res: Response) {
 
 async function moveExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId } = req.params
 
     const { containerId, sourceIndex, destinationIndex } = req.body
@@ -228,6 +260,10 @@ async function moveExercise(req: Request, res: Response) {
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     if (containerId === programId) {
@@ -293,12 +329,18 @@ async function moveExercise(req: Request, res: Response) {
 
 async function deleteExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { programId, exerciseId } = req.params
 
     const program = await Program.findById(programId).populate('workout')
 
     if (!program) {
       return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
     }
 
     const workoutItem = program.workout.find((item: any) => item.components.includes(exerciseId))
