@@ -5,6 +5,8 @@ import { TemplateWorkoutItem } from '../models/templateWorkoutItem.model'
 
 async function createExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId } = req.params
 
     const { name, sets } = req.body
@@ -13,6 +15,10 @@ async function createExercise(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const newTemplateExercise = new TemplateExercise({
@@ -42,6 +48,8 @@ async function createExercise(req: Request, res: Response) {
 
 async function editExerciseName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, exerciseId } = req.params
 
     const { name } = req.body
@@ -50,6 +58,10 @@ async function editExerciseName(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find((item: any) =>
@@ -84,6 +96,8 @@ async function editExerciseName(req: Request, res: Response) {
 
 async function editExerciseSet(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, exerciseId } = req.params
 
     const { sets } = req.body
@@ -92,6 +106,10 @@ async function editExerciseSet(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find((item: any) =>
@@ -120,6 +138,8 @@ async function editExerciseSet(req: Request, res: Response) {
 
 async function moveExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId } = req.params
 
     const { containerId, sourceIndex, destinationIndex } = req.body
@@ -128,6 +148,10 @@ async function moveExercise(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     if (containerId === templateId) {
@@ -195,12 +219,18 @@ async function moveExercise(req: Request, res: Response) {
 
 async function deleteExercise(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, exerciseId } = req.params
 
     const template = await Template.findById(templateId).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find((item: any) =>

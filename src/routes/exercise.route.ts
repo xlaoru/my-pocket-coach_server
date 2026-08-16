@@ -1,23 +1,38 @@
-import { Router } from "express";
+import { Router } from 'express'
 
-import { createExercise, editExerciseName, addExerciseSet, editExerciseSet, removeExerciseSet, moveExercise, deleteExercise, } from "../controllers/exercise.contoller";
+import {
+  addExerciseSet,
+  createExercise,
+  deleteExercise,
+  editExerciseName,
+  editExerciseSet,
+  moveExercise,
+  removeExerciseSet,
+} from '../controllers/exercise.controller'
+import { isAuth } from '../middleware/is-auth.middleware'
 
-const exerciseRouter = Router();
+const exerciseRouter = Router()
 
-exerciseRouter.post("/programs/:programId/exercises", createExercise);
+exerciseRouter.post('/programs/:programId/exercises', isAuth, createExercise)
 
-exerciseRouter.patch("/programs/:programId/exercises/:exerciseId", editExerciseName);
+exerciseRouter.patch('/programs/:programId/exercises/:exerciseId', isAuth, editExerciseName)
 
-exerciseRouter.post("/programs/:programId/exercises/:exerciseId/sets", addExerciseSet);
+exerciseRouter.post('/programs/:programId/exercises/:exerciseId/sets', isAuth, addExerciseSet)
 
-exerciseRouter.patch("/programs/:programId/exercises/:exerciseId/sets/:setIndex", editExerciseSet);
+exerciseRouter.patch(
+  '/programs/:programId/exercises/:exerciseId/sets/:setIndex',
+  isAuth,
+  editExerciseSet,
+)
 
-exerciseRouter.delete("/programs/:programId/exercises/:exerciseId/sets/:setIndex", removeExerciseSet);
+exerciseRouter.delete(
+  '/programs/:programId/exercises/:exerciseId/sets/:setIndex',
+  isAuth,
+  removeExerciseSet,
+)
 
-exerciseRouter.patch("/programs/:programId/workout/move", moveExercise)
+exerciseRouter.patch('/programs/:programId/workout/move', isAuth, moveExercise)
 
-exerciseRouter.delete("/programs/:programId/exercises/:exerciseId", deleteExercise);
+exerciseRouter.delete('/programs/:programId/exercises/:exerciseId', isAuth, deleteExercise)
 
-export {
-    exerciseRouter
-}
+export { exerciseRouter }

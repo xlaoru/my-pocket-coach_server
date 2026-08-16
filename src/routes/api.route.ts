@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { authRouter } from './auth.route'
 import { exerciseRouter } from './exercise.route'
 import { periodizationRouter } from './periodization.route'
 import { programRouter } from './program.route'
@@ -19,5 +20,6 @@ apiRouter.use(stageRouter)
 apiRouter.use(templateRouter)
 apiRouter.use(templateExerciseRoute)
 apiRouter.use(templateSupersetRouter)
+apiRouter.use(authRouter)
 
 export { apiRouter }

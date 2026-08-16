@@ -5,6 +5,8 @@ import { TemplateWorkoutItem } from '../models/templateWorkoutItem.model'
 
 async function createSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId } = req.params
 
     const { name, templateWorkoutItemIds } = req.body
@@ -17,6 +19,10 @@ async function createSuperset(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const selectedIds = templateWorkoutItemIds.map((itemId) => String(itemId))
@@ -92,6 +98,8 @@ async function createSuperset(req: Request, res: Response) {
 
 async function editSupersetName(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId } = req.params
 
     const { name } = req.body
@@ -100,6 +108,10 @@ async function editSupersetName(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find(
@@ -128,12 +140,18 @@ async function editSupersetName(req: Request, res: Response) {
 
 async function deleteSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId } = req.params
 
     const template = await Template.findById(templateId).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find(
@@ -168,12 +186,18 @@ async function deleteSuperset(req: Request, res: Response) {
 
 async function unlinkAllSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId } = req.params
 
     const template = await Template.findById(templateId).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     let deletedSupersetIndex = -1
@@ -237,6 +261,8 @@ async function unlinkAllSupersetExercises(req: Request, res: Response) {
 
 async function addNewExerciseInsideSuperset(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId } = req.params
 
     const { name, sets } = req.body
@@ -245,6 +271,10 @@ async function addNewExerciseInsideSuperset(req: Request, res: Response) {
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find(
@@ -280,12 +310,18 @@ async function addNewExerciseInsideSuperset(req: Request, res: Response) {
 
 async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId, exerciseId } = req.params
 
     const template = await Template.findById(templateId).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateSupersetIndex = template.templateWorkout.findIndex(
@@ -397,12 +433,18 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
 
 async function linkCurrentSupersetExercises(req: Request, res: Response) {
   try {
+    const userId = req.user!.id
+
     const { templateId, supersetId, exerciseId } = req.params
 
     const template = await Template.findById(templateId).populate('templateWorkout')
 
     if (!template) {
       return res.status(404).json({ message: 'Template not found' })
+    }
+
+    if (!template.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this template' })
     }
 
     const templateWorkoutItem = template.templateWorkout.find(

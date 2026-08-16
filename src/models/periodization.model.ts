@@ -9,6 +9,11 @@ const periodizationSchema = new mongoose.Schema({
       ref: 'Stage',
     },
   ],
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 })
 
 export const Periodization = mongoose.model('Periodization', periodizationSchema)

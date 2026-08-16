@@ -1,6 +1,11 @@
 import mongoose from 'mongoose'
 
 const programSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   name: String,
   description: String,
   date: Date,

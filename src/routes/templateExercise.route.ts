@@ -6,17 +6,26 @@ import {
   editExerciseSet,
   moveExercise,
 } from '../controllers/templateExercise.controller'
+import { isAuth } from '../middleware/is-auth.middleware'
 
 const templateExerciseRoute = Router()
 
-templateExerciseRoute.post('/templates/:templateId/exercises', createExercise)
+templateExerciseRoute.post('/templates/:templateId/exercises', isAuth, createExercise)
 
-templateExerciseRoute.patch('/templates/:templateId/exercises/:exerciseId/name', editExerciseName)
+templateExerciseRoute.patch(
+  '/templates/:templateId/exercises/:exerciseId/name',
+  isAuth,
+  editExerciseName,
+)
 
-templateExerciseRoute.patch('/templates/:templateId/exercises/:exerciseId/sets', editExerciseSet)
+templateExerciseRoute.patch(
+  '/templates/:templateId/exercises/:exerciseId/sets',
+  isAuth,
+  editExerciseSet,
+)
 
-templateExerciseRoute.patch('/templates/:templateId/templateWorkout/move', moveExercise)
+templateExerciseRoute.patch('/templates/:templateId/templateWorkout/move', isAuth, moveExercise)
 
-templateExerciseRoute.delete('/templates/:templateId/exercises/:exerciseId', deleteExercise)
+templateExerciseRoute.delete('/templates/:templateId/exercises/:exerciseId', isAuth, deleteExercise)
 
 export { templateExerciseRoute }
