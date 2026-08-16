@@ -1,7 +1,7 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import mongoose from 'mongoose'
 
-interface TokenPayload extends JwtPayload {
+export interface TokenPayload extends JwtPayload {
   id: mongoose.Types.ObjectId
 }
 
