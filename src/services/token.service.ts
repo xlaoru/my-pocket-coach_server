@@ -1,5 +1,9 @@
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import mongoose from 'mongoose'
+
+interface TokenPayload extends JwtPayload {
+  id: mongoose.Types.ObjectId
+}
 
 function getEnvVar(name: string): string {
   const value = process.env[name]
@@ -22,7 +26,7 @@ async function generateAccessToken(id: mongoose.Types.ObjectId) {
 
 async function validateAccessToken(token: string) {
   try {
-    const userData = jwt.verify(token, accessTokenSecret)
+    const userData = jwt.verify(token, accessTokenSecret) as TokenPayload
     return userData
   } catch (error) {
     return null
@@ -39,7 +43,7 @@ async function generateRefreshToken(id: mongoose.Types.ObjectId) {
 
 async function validateRefreshToken(token: string) {
   try {
-    const userData = jwt.verify(token, refreshTokenSecret)
+    const userData = jwt.verify(token, refreshTokenSecret) as TokenPayload
     return userData
   } catch (error) {
     return null

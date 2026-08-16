@@ -1,7 +1,11 @@
 import bcrypt from 'bcryptjs'
 import { Request, Response } from 'express'
 import { User } from '../models/user.model'
-import { generateAccessToken, generateRefreshToken } from '../services/token.service'
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  validateRefreshToken,
+} from '../services/token.service'
 
 async function signUp(req: Request, res: Response) {
   try {
@@ -63,6 +67,30 @@ async function logIn(req: Request, res: Response) {
   }
 }
 
-async function refresh(req: Request, res: Response) {}
+async function refresh(req: Request, res: Response) {
+  try {
+    const { refreshToken } = req.body
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: 'No refresh token provided.' })
+    }
+
+    const userData = await validateRefreshToken(refreshToken)
+
+    if (!userData) {
+      return res.status(401).json({ message: 'Invalid refresh token.' })
+    }
+
+    const accessToken = await generateAccessToken(userData.id)
+    const newRefreshToken = await generateRefreshToken(userData.id)
+
+    return res.json({
+      accessToken,
+      refreshToken: newRefreshToken,
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Token refresh error' })
+  }
+}
 
 export { logIn, refresh, signUp }
