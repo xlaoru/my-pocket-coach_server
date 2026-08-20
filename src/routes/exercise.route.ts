@@ -8,6 +8,7 @@ import {
   editExerciseSet,
   moveExercise,
   removeExerciseSet,
+  setExerciseNote,
 } from '../controllers/exercise.controller'
 import { isAuth } from '../middleware/is-auth.middleware'
 
@@ -34,5 +35,7 @@ exerciseRouter.delete(
 exerciseRouter.patch('/programs/:programId/workout/move', isAuth, moveExercise)
 
 exerciseRouter.delete('/programs/:programId/exercises/:exerciseId', isAuth, deleteExercise)
+
+exerciseRouter.patch('/programs/:programId/exercises/:exerciseId/note', isAuth, setExerciseNote)
 
 export { exerciseRouter }

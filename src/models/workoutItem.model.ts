@@ -1,16 +1,22 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const workoutItemSchema = new mongoose.Schema({
-    type: {
-        type: String,
-        enum: ["exercise", "superset"],
-        required: true,
+  type: {
+    type: String,
+    enum: ['exercise', 'superset'],
+    required: true,
+  },
+  name: String,
+  components: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Exercise',
     },
-    name: String,
-    components: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Exercise",
-    }],
-});
+  ],
+  note: {
+    type: String,
+    default: '',
+  },
+})
 
-export const WorkoutItem = mongoose.model("WorkoutItem", workoutItemSchema);
+export const WorkoutItem = mongoose.model('WorkoutItem', workoutItemSchema)
