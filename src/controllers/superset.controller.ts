@@ -220,6 +220,7 @@ async function unlinkAllSupersetExercises(req: Request, res: Response) {
       type: 'exercise',
       name: exercise.name,
       components: [exercise._id],
+      note: exercise.note,
     }))
 
     const createdWorkoutItems = await WorkoutItem.insertMany(newWorkoutItemsData)
@@ -420,6 +421,7 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
         type: 'exercise',
         name: ex.name,
         components: [ex._id],
+        note: ex.note,
       }))
 
       const createdWorkoutItems = await WorkoutItem.insertMany(newWorkoutItemsData)
@@ -443,6 +445,7 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
       type: 'exercise',
       name: exercise.name,
       components: [exercise._id],
+      note: exercise.note,
     })
 
     const savedWorkoutItem = await newWorkoutItem.save()
