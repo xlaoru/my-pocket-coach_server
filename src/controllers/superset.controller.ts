@@ -220,6 +220,7 @@ async function unlinkAllSupersetExercises(req: Request, res: Response) {
       type: 'exercise',
       name: exercise.name,
       components: [exercise._id],
+      note: exercise.note,
     }))
 
     const createdWorkoutItems = await WorkoutItem.insertMany(newWorkoutItemsData)
@@ -420,6 +421,7 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
         type: 'exercise',
         name: ex.name,
         components: [ex._id],
+        note: ex.note,
       }))
 
       const createdWorkoutItems = await WorkoutItem.insertMany(newWorkoutItemsData)
@@ -443,6 +445,7 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
       type: 'exercise',
       name: exercise.name,
       components: [exercise._id],
+      note: exercise.note,
     })
 
     const savedWorkoutItem = await newWorkoutItem.save()
@@ -461,12 +464,59 @@ async function unlinkCurrentSupersetExercises(req: Request, res: Response) {
   }
 }
 
+async function setSupersetNote(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id
+
+    const { programId, supersetId } = req.params
+
+    const { note } = req.body
+
+    if (note !== undefined && typeof note !== 'string') {
+      return res.status(400).json({ message: 'Note must be a string' })
+    }
+
+    const program = await Program.findById(programId).populate('workout')
+
+    if (!program) {
+      return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
+    }
+
+    const workoutItem = program.workout.find((item: any) => item._id.toString() === supersetId)
+
+    if (!workoutItem) {
+      return res.status(404).json({ message: 'Superset not found in program' })
+    }
+
+    if ((workoutItem as any).type !== 'superset') {
+      return res.status(400).json({ message: 'Workout item is not a superset' })
+    }
+
+    if (note !== undefined) {
+      ;(workoutItem as any).note = note.trim()
+
+      await (workoutItem as any).save()
+    }
+
+    const updatedSuperset = await (workoutItem as any).populate('components')
+
+    res.status(200).json(updatedSuperset)
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to set superset note' })
+  }
+}
+
 export {
   addNewExerciseInsideSuperset,
   createSuperset,
   deleteSuperset,
   editSupersetName,
   linkCurrentSupersetExercises,
+  setSupersetNote,
   unlinkAllSupersetExercises,
   unlinkCurrentSupersetExercises,
 }

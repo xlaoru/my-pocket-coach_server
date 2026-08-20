@@ -379,6 +379,60 @@ async function deleteExercise(req: Request, res: Response) {
   }
 }
 
+async function setExerciseNote(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id
+
+    const { programId, exerciseId } = req.params
+
+    const { note } = req.body as { note?: unknown }
+
+    if (note !== undefined && typeof note !== 'string') {
+      return res.status(400).json({ message: 'Note must be a string' })
+    }
+
+    const program = await Program.findById(programId).populate('workout')
+
+    if (!program) {
+      return res.status(404).json({ message: 'Program not found' })
+    }
+
+    if (!program.user.equals(userId)) {
+      return res.status(403).json({ message: 'You are not allowed to modify this program' })
+    }
+
+    const workoutItem = program.workout.find((item: any) =>
+      item.components.some((component: any) => component.toString() === exerciseId),
+    )
+
+    if (!workoutItem) {
+      return res.status(404).json({ message: 'Exercise not found in program' })
+    }
+
+    const exercise = await Exercise.findById(exerciseId)
+
+    if (!exercise) {
+      return res.status(404).json({ message: 'Exercise not found' })
+    }
+
+    if (note !== undefined) {
+      exercise.note = note.trim()
+    }
+
+    const updatedExercise = await exercise.save()
+
+    if ((workoutItem as any).type === 'exercise' && note !== undefined) {
+      ;(workoutItem as any).note = note.trim()
+
+      await (workoutItem as any).save()
+    }
+
+    res.status(200).json(updatedExercise)
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to set note for exercise' })
+  }
+}
+
 export {
   addExerciseSet,
   createExercise,
@@ -387,4 +441,5 @@ export {
   editExerciseSet,
   moveExercise,
   removeExerciseSet,
+  setExerciseNote,
 }
